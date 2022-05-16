@@ -5,8 +5,9 @@
 Script to transform .fastq files to an output with phredscores only
 """
 
+
 __author__ = "Pascal Visser"
-__version__ = 1.0
+__version__ = 1.2
 
 
 import sys
@@ -49,7 +50,7 @@ def process_fasta(fastqfile, start=0, chunk=0):
     return score
 
 
-def write_csv(phredscores, csvfile="phredscores.csv"):
+def write_csvfile(phredscores, csvfile="phredscores.csv"):
     """Write results to .csv file"""
     with open(csvfile, 'x', encoding='utf8') as csv:
         for number in range(len(phredscores) - 1):
@@ -84,9 +85,10 @@ def main(args=None):
         scores = process_fasta(readfile)
 
     if csvname == 'None':
-        write_csv(scores)
+        for number in range(len(scores) - 1):
+            sys.stdout.write(str(number) + ',' + str(scores[number]) + "\n")
     else:
-        write_csv(scores, csvname)
+        write_csvfile(scores, csvname)
 
 
 if __name__ == '__main__':
