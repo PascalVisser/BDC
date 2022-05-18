@@ -1,66 +1,85 @@
-#!/usr/bin/env python3
+#! usr/bin/env python3
 
 
 """
-Script to transform .fastq files to an output with phredscores only
+Calculates the average phredscore within a fastq file
 """
-
 
 __author__ = "Pascal Visser"
-__version__ = 1.2
-
+__version__ = 2.0
 
 import sys
+import time
+import csv
 import argparse as ap
+import multiprocessing as mp
 
 
-def process_fasta(fastqfile, start=0, chunk=0):
-    """open file(s) and calculate the phredscores"""
-    with open(fastqfile, 'r', encoding='utf8') as fastq:
-        if chunk == 0:
-            chunk = len(fastq.readlines()) - 1
-        fastq.seek(0)
-        # fastforward
-        # start = 0
-        i = 0
-        while i < start:
-            fastq.readline()
-            i += 1
+def read_fastq_file(fastq_file):
+    """Reads the files and pick the quality line"""
+    quality_line = []
+    quality = True
 
-        results = []
-        counter = 0
-        while counter < chunk:
+    with open(fastq_file, encoding='UTF-8') as fastq:
+        while quality:
             header = fastq.readline()
             nucleotides = fastq.readline()
             strand = fastq.readline()
-            qual = fastq.readline()
-            counter += 4
+            quality = fastq.readline().rstrip()
 
-            if not qual:
-                # we reached the end of the file
-                break
-            for j, c in enumerate(qual):
+            if quality:
+                quality_line.append(quality)
+            elif header:
+                pass
+            elif nucleotides:
+                pass
+            elif strand:
+                pass
 
-                try:
-                    results[j] += ord(c) - 33
-                except IndexError:
-                    results.append(ord(c) - 33)
-
-    score = [(phredscore / (counter / 4)) for phredscore in results]
-    return score
+    return quality_line
 
 
-def write_csvfile(phredscores, csvfile="phredscores.csv"):
-    """Write results to .csv file"""
-    with open(csvfile, 'x', encoding='utf8') as csv:
-        for number in range(len(phredscores) - 1):
-            csv.write(str(number) + ',' + str(phredscores[number]) + "\n")
+def make_chunks(number, size):
+    """Make processable chunks of the data"""
+    chunks = []
+
+    for i in range(size):
+        start = int(i * len(number) / size)
+        end = int((i + 1) * len(number) / size)
+        chunks.append(number[start:end])
+    return chunks
 
 
-def main(args=None):
-    """Main function"""
+def calc_quality_score(quality):
+    """Calculates quality scores of the quality line"""
+    result = []
+    for quality_line in quality:
+        for item, checker in enumerate(quality_line):
+            try:
+                result[item] += ord(checker) - 33
+            except IndexError:
+                result.append(ord(checker) - 33)
+    return result
 
-    # argument parser
+
+def get_output(average_phredscores, csvfile):
+    """ processes the output for the file(s) """
+    if csvfile is None:
+        csv_writer = csv.writer(sys.stdout, delimiter=',')
+        for i, score in enumerate(average_phredscores):
+            csv_writer.writerow([i, score])
+
+    else:
+        with open(csvfile, 'w', encoding='UTF-8', newline='') as myfastq:
+            csv_writer = csv.writer(myfastq, delimiter=',')
+            for i, score in enumerate(average_phredscores):
+                csv_writer.writerow([i, score])
+
+
+def main(argv=None):
+    """Executing function"""
+
+    # Collect input with argparse
     argparser = ap.ArgumentParser(description="Script voor Opdracht 1 van Big Data Computing")
 
     argparser.add_argument("-n", action="store",
@@ -76,19 +95,37 @@ def main(args=None):
                            help="Minstens 1 Illumina Fastq Format file om te verwerken")
     args = argparser.parse_args()
 
-    # Assign arguments to variables
-    fastqfiles = args.fastq_files
-    csvname = str(args.output)
+    # start timing
+    start = time.time()
 
-    # Execute functions on the arguments
-    for readfile in fastqfiles:
-        scores = process_fasta(readfile)
+    # loop through the input file(s) to make chunks
+    for fastq in args.fastq_files:
+        qualities = read_fastq_file(fastq)
+        qual_chunked = make_chunks(qualities, 100)
 
-    if csvname == 'None':
-        for number in range(len(scores) - 1):
-            sys.stdout.write(str(number) + ',' + str(scores[number]) + "\n")
-    else:
-        write_csvfile(scores, csvname)
+        # use multiple processes to calculate the phredscores
+        with mp.Pool(args.n) as pool:
+            phredscores = pool.map(calc_quality_score, qual_chunked)
+
+        phredscores_avg = [sum(i) / len(qualities) for i in zip(*phredscores)]
+
+        # Determine what to do with the (csv)output
+        if len(args.fastq_files) > 1:
+            if args.CSVfile is None:
+                sys.stdout.write(fastq + "\n")
+                csv_file = None
+            else:
+                csv_file = f'{fastq}.{args.CSVfile}'
+        else:
+            csv_file = args.CSVfile
+
+        get_output(phredscores_avg, csv_file)
+
+        # End timing
+        end = time.time()
+
+        # print total proces time
+        print(f"\nFinished in {round(end - start, 2)} seconds\n")
 
 
 if __name__ == '__main__':
