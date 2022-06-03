@@ -73,18 +73,6 @@ def main(args=None):
 
     print(f"Finished in {round(end - start, 2)} seconds")
 
-    # Determine what to do with the (csv)output
-    #if len(args.fastq_files) > 1:
-        #if args.output_csv is None:
-            #sys.stdout.write(fastq + "\n")
-            #csv_file = None
-        #else:
-            #csv_file = f'{fastq}.{args.output_csv}'
-    #else:
-         #csv_file = args.output_csv
-
-    #get_output(phredscores_avg, csv_file)
-
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
