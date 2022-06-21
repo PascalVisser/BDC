@@ -111,13 +111,13 @@ def main(argv=None):
 
         # Determine what to do with the (csv)output
         if len(args.fastq_files) > 1:
-            if args.CSVfile is None:
+            if args.output is None:
                 sys.stdout.write(fastq + "\n")
                 csv_file = None
             else:
-                csv_file = f'{fastq}.{args.CSVfile}'
+                csv_file = f'{fastq}.{args.output}'
         else:
-            csv_file = args.CSVfile
+            csv_file = args.output
 
         get_output(phredscores_avg, csv_file)
 
