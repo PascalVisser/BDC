@@ -1,0 +1,4 @@
+Report for Assignment 3 start evaluation at vr 24 jun 2022 13:01:11 CEST with options: None
+sbatch: unrecognized option '--cpus_per_task=16'
+Try "sbatch --help" for more information
+***ASSIGNMENT {assignment} STATUS: FAILED at  vr 24 jun 2022 13:01:11 CEST
