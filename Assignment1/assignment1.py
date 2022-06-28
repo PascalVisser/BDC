@@ -6,7 +6,7 @@ Calculates the average phredscore within a fastq file
 """
 
 __author__ = "Pascal Visser"
-__version__ = 2.0
+__version__ = 2.1
 
 import sys
 import time
