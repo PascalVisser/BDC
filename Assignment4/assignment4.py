@@ -6,71 +6,63 @@ Script that checks if a given fastq RNAseq file is 'valid'
 
 
 __author__ = "Pascal Visser"
-__version__ = 1.2
+__version__ = 2.2
 
 
-import argparse
 import sys
-from statistics import mean
+import csv
 
 
-def fastq_control_centre(fastq):
-    """ Controls the Fastq files. """
+def read_fastq(fastqfile):
+    """Reads the fastq file and calcualates the phredscores"""
 
-    complete = True
-    quals = ""
-    start = ""
-    count_l = 0
-    len_line = []
+    with open(fastqfile, 'r') as fastq:
+        valid = True
+        counter = 0
+        min_length = 1e99
+        max_length = 0
+        avg_length = [0, 0]
+        while True:
+            header = fastq.readline().rstrip()
+            nucleotides = fastq.readline().rstrip()
+            seperator = fastq.readline().rstrip()
+            qual = fastq.readline().rstrip()
 
-    with open(fastq[0], "r", encoding="utf-8") as myfile:
-        for item, line in enumerate(myfile):
-            count_l += 1
-            count = item - 1
-            if not count % 4:
-                start = len(line.strip())
-                len_line.append(start)
-
-            count = item + 1
-            if not count % 4:
-                quals = len(line.strip())
-                len_line.append(quals)
-
-            if quals and start:
-                if start != quals:
-                    complete = False
+            if len(header) == 0:
                 break
-
-            if count_l % 4:
-                complete = False
+            if len(nucleotides) == 0:
+                counter += 1
+                break
+            if len(seperator) == 0:
+                counter += 2
+                break
+            if len(qual) == 0:
+                counter += 3
+                break
             else:
-                pass
+                counter += 4
 
-    maxed_lines = str(max(len_line))
-    min_lines = str(min(len_line))
+            # validity checks only if it is still valid
+            if valid:
+                if len(qual) != len(nucleotides):
+                    valid = False
+                if not header.startswith('@'):
+                    valid = False
 
-    line_length_mean = str(round(mean(len_line), 2))
+            # keep track of lengths:
+            if len(nucleotides) < min_length:
+                min_length = len(nucleotides)
+            if len(nucleotides) > max_length:
+                max_length = len(nucleotides)
+            avg_length[0] += len(nucleotides)
+            avg_length[1] += 1
 
-    files = sys.stdout.write(str(fastq[0]).split("/", maxsplit=1)[-1])
-    sys.stdout.write(str(files) + "," + str(complete) + "," + min_lines +
-                     "," + maxed_lines + "," + line_length_mean + "\n")
-
-
-def argument_parser():
-    """ Arg-parser for commandline. """
-
-    myargs = argparse.ArgumentParser(description="Script voor Opdracht 4 van Big Data Computing.")
-    myargs.add_argument("fastq", action="store", type=str, nargs='*',
-                        help="Minstens 1 Illumina Fastq Format file om te verwerken")
-
-    args = myargs.parse_args()
-    main(args)
-
-
-def main(args):
-    """ Main function, runs entire script. """
-    fastq_control_centre(args.fastq)
+        file = fastqfile.split('/')[-1]
+        return {'file': file, 'valid': valid, 'min_length': min_length, 'max_length': max_length,
+                'avg_length': avg_length[0] / avg_length[1]}
 
 
 if __name__ == '__main__':
-    argument_parser()
+    result = read_fastq(sys.argv[1])
+    csv.writer(sys.stdout, delimiter=',').writerow(
+        [result['file'], result['valid'], result['min_length'], result['max_length'], result['avg_length']])
