@@ -1,4 +1,8 @@
+************* Module assignment4
+assignment4.py:71:0: C0301: Line too long (108/100) (line-too-long)
+assignment4.py:20:9: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+assignment4.py:40:12: R1723: Unnecessary "else" after "break" (no-else-break)
 
--------------------------------------------------------------------
-Your code has been rated at 10.00/10 (previous run: 9.53/10, +0.47)
+------------------------------------------------------------------
+Your code has been rated at 9.32/10 (previous run: 9.55/10, -0.23)
 
