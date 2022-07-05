@@ -1,10 +1,2 @@
-Report for Assignment1 start evaluation at 2022-06-16 10:46:52.792629 with options ['-n', '4', '/homes/martijntest/courses/BDC/2022/grading.fastq']
-Errors occurred during Process run at 2022-06-16 10:46:59.461959!
-Traceback (most recent call last):
-  File "assignment1.py", line 132, in <module>
-    sys.exit(main(sys.argv))
-  File "assignment1.py", line 120, in main
-    csv_file = args.CSVfile
-AttributeError: 'Namespace' object has no attribute 'CSVfile'
-
-*** ASSIGNMENT assignment1.py STATUS: FAILED  at 2022-06-16 10:46:59.462036***
+Report for Assignment1 start evaluation at 2022-07-05 10:48:53.944185 with options ['-n', '4', '/homes/martijntest/courses/BDC/2022/grading.fastq']
+*** ASSIGNMENT assignment1.py STATUS: PASSED at 2022-07-05 10:49:01.969698 ***
